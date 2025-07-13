@@ -1,0 +1,157 @@
+version: '3.8'
+
+services:
+  # PostgreSQL Database
+  postgres:
+    image: postgres:15-alpine
+    environment:
+      POSTGRES_DB: stockdb
+      POSTGRES_USER: stockuser
+      POSTGRES_PASSWORD: stockpass
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+      - ./sql/init:/docker-entrypoint-initdb.d
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U stockuser -d stockdb"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+
+  # Redis Cache
+  redis:
+    image: redis:7-alpine
+    command: redis-server --maxmemory 256mb --maxmemory-policy allkeys-lru
+    ports:
+      - "6379:6379"
+    volumes:
+      - redis_data:/data
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+
+  # RabbitMQ Message Queue
+  rabbitmq:
+    image: rabbitmq:3-management-alpine
+    environment:
+      RABBITMQ_DEFAULT_USER: stockmq
+      RABBITMQ_DEFAULT_PASS: stockmqpass
+    ports:
+      - "5672:5672"    # AMQP port
+      - "15672:15672"  # Management UI
+    volumes:
+      - rabbitmq_data:/var/lib/rabbitmq
+    healthcheck:
+      test: ["CMD", "rabbitmq-diagnostics", "ping"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+
+  # Backend API Server
+  backend:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+    ports:
+      - "8080:8080"
+    environment:
+      - DB_HOST=postgres
+      - DB_PORT=5432
+      - DB_USER=stockuser
+      - DB_PASSWORD=stockpass
+      - DB_NAME=stockdb
+      - REDIS_HOST=redis
+      - REDIS_PORT=6379
+      - RABBITMQ_HOST=rabbitmq
+      - RABBITMQ_PORT=5672
+      - RABBITMQ_USER=stockmq
+      - RABBITMQ_PASS=stockmqpass
+      - DBSEC_API_KEY=${DBSEC_API_KEY}
+      - AI_SERVICE_URL=http://ai-service:8001
+    volumes:
+      - ./backend:/app
+      - ./logs:/app/logs
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+      rabbitmq:
+        condition: service_healthy
+    command: ["./wait-for-it.sh", "postgres:5432", "--", "go", "run", "main.go"]
+
+  # Data Collector Worker
+  data-collector:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+    environment:
+      - DB_HOST=postgres
+      - DB_PORT=5432
+      - DB_USER=stockuser
+      - DB_PASSWORD=stockpass
+      - DB_NAME=stockdb
+      - REDIS_HOST=redis
+      - REDIS_PORT=6379
+      - RABBITMQ_HOST=rabbitmq
+      - RABBITMQ_PORT=5672
+      - RABBITMQ_USER=stockmq
+      - RABBITMQ_PASS=stockmqpass
+      - DBSEC_API_KEY=${DBSEC_API_KEY}
+    volumes:
+      - ./backend:/app
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+      rabbitmq:
+        condition: service_healthy
+    command: ["./wait-for-it.sh", "postgres:5432", "--", "go", "run", "cmd/collector/main.go"]
+
+  # AI/ML Service (Python)
+  ai-service:
+    build:
+      context: ./ai
+      dockerfile: Dockerfile
+    ports:
+      - "8001:8001"
+    environment:
+      - PYTHONPATH=/app
+      - MODEL_PATH=/app/models
+    volumes:
+      - ./ai:/app
+      - ./models:/app/models
+    command: ["python", "main.py"]
+
+  # News Crawler
+  crawler:
+    build:
+      context: ./crawler
+      dockerfile: Dockerfile
+    environment:
+      - DB_HOST=postgres
+      - DB_PORT=5432
+      - DB_USER=stockuser
+      - DB_PASSWORD=stockpass
+      - DB_NAME=stockdb
+      - RABBITMQ_HOST=rabbitmq
+      - RABBITMQ_PORT=5672
+      - RABBITMQ_USER=stockmq
+      - RABBITMQ_PASS=stockmqpass
+    volumes:
+      - ./crawler:/app
+    depends_on:
+      postgres:
+        condition: service_healthy
+      rabbitmq:
+        condition: service_healthy
+    command: ["python", "main.py"]
+
+volumes:
+  postgres_data:
+  redis_data:
+  rabbitmq_data:
