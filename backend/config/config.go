@@ -34,6 +34,8 @@ type RabbitMQConfig struct {
 
 type APIConfig struct {
 	DBSecAPIKey    string
+	DBSecAppKey    string
+	DBSecAppSecret string
 	AIServiceURL   string
 }
 
@@ -58,8 +60,10 @@ func Load() *Config {
 			Password: getEnv("RABBITMQ_PASS", "stockmqpass"),
 		},
 		API: APIConfig{
-			DBSecAPIKey:  getEnv("DBSEC_API_KEY", ""),
-			AIServiceURL: getEnv("AI_SERVICE_URL", "http://localhost:8001"),
+			DBSecAPIKey:    getEnv("DBSEC_API_KEY", ""),
+			DBSecAppKey:    getEnv("DBSEC_APP_KEY", ""),
+			DBSecAppSecret: getEnv("DBSEC_APP_SECRET", ""),
+			AIServiceURL:   getEnv("AI_SERVICE_URL", "http://localhost:8001"),
 		},
 	}
 }

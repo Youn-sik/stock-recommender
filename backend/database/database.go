@@ -37,10 +37,11 @@ func Initialize(cfg *config.Config) (*gorm.DB, error) {
 
 func AutoMigrate(db *gorm.DB) error {
 	return db.AutoMigrate(
+		&models.Stock{},
 		&models.StockPrice{},
+		&models.AskingPrice{},
 		&models.TechnicalIndicator{},
 		&models.TradingSignal{},
 		&models.NewsArticle{},
-		&models.Stock{},
 	)
 }

@@ -22,6 +22,7 @@ func Setup(db *gorm.DB, cfg *config.Config) *gin.Engine {
 	stockHandler := handlers.NewStockHandler(db, cfg)
 	signalHandler := handlers.NewSignalHandler(db, cfg)
 	healthHandler := handlers.NewHealthHandler(db)
+	adminHandler := handlers.NewAdminHandler(db, cfg)
 
 	// Health check
 	r.GET("/health", healthHandler.HealthCheck)
@@ -45,11 +46,23 @@ func Setup(db *gorm.DB, cfg *config.Config) *gin.Engine {
 			signals.GET("/:symbol", signalHandler.GetSignalsBySymbol)
 		}
 
-		// Admin endpoints (for testing)
+		// Admin endpoints (for testing and management)
 		admin := api.Group("/admin")
 		{
-			admin.POST("/stocks", stockHandler.CreateStock)
-			admin.POST("/collect/:symbol", stockHandler.TriggerCollection)
+			// Stock management
+			admin.POST("/stocks", adminHandler.CreateStock)
+			admin.GET("/stocks", adminHandler.GetAllStocks)
+			admin.PUT("/stocks/:symbol/status", adminHandler.UpdateStockStatus)
+			admin.DELETE("/stocks/:symbol", adminHandler.DeleteStock)
+			
+			// Data collection
+			admin.POST("/collect/:symbol", adminHandler.TriggerDataCollection)
+			admin.POST("/collect/all", adminHandler.TriggerAllDataCollection)
+			admin.POST("/initialize/major-stocks", adminHandler.InitializeMajorStocks)
+			
+			// System status
+			admin.GET("/api-status", adminHandler.GetAPIStatus)
+			admin.GET("/database/stats", adminHandler.GetDatabaseStats)
 		}
 	}
 

@@ -23,16 +23,20 @@ type Stock struct {
 
 // StockPrice represents historical and real-time stock price data
 type StockPrice struct {
-	ID        uint      `gorm:"primarykey" json:"id"`
-	Symbol    string    `gorm:"index:idx_symbol_timestamp;size:20;not null" json:"symbol"`
-	Market    string    `gorm:"size:5;not null" json:"market"`
-	OpenPrice float64   `gorm:"type:decimal(12,4)" json:"open_price"`
-	HighPrice float64   `gorm:"type:decimal(12,4)" json:"high_price"`
-	LowPrice  float64   `gorm:"type:decimal(12,4)" json:"low_price"`
-	ClosePrice float64  `gorm:"type:decimal(12,4)" json:"close_price"`
-	Volume    int64     `json:"volume"`
-	Timestamp time.Time `gorm:"index:idx_symbol_timestamp;not null" json:"timestamp"`
-	CreatedAt time.Time `json:"created_at"`
+	ID             uint      `gorm:"primarykey" json:"id"`
+	Symbol         string    `gorm:"index:idx_symbol_timestamp;size:20;not null" json:"symbol"`
+	Market         string    `gorm:"size:5;not null" json:"market"`
+	OpenPrice      float64   `gorm:"type:decimal(12,4)" json:"open_price"`
+	HighPrice      float64   `gorm:"type:decimal(12,4)" json:"high_price"`
+	LowPrice       float64   `gorm:"type:decimal(12,4)" json:"low_price"`
+	ClosePrice     float64   `gorm:"type:decimal(12,4)" json:"close_price"`
+	Volume         int64     `json:"volume"`
+	TradeAmount    int64     `json:"trade_amount"`
+	PrevClosePrice float64   `gorm:"type:decimal(12,4)" json:"prev_close_price"`
+	Change         float64   `gorm:"type:decimal(12,4)" json:"change"`
+	ChangeRate     float64   `gorm:"type:decimal(5,2)" json:"change_rate"`
+	Timestamp      time.Time `gorm:"index:idx_symbol_timestamp;not null" json:"timestamp"`
+	CreatedAt      time.Time `json:"created_at"`
 }
 
 // TechnicalIndicator represents calculated technical indicators
@@ -88,4 +92,34 @@ type AIDecisionResponse struct {
 	Confidence float64   `json:"confidence"` // 0.0 ~ 1.0
 	Reasoning  []string  `json:"reasoning"`
 	Timestamp  time.Time `json:"timestamp"`
+}
+
+// AskingPrice represents bid/ask price information
+type AskingPrice struct {
+	ID          uint      `gorm:"primarykey" json:"id"`
+	Symbol      string    `gorm:"index;size:20;not null" json:"symbol"`
+	AskPrice1   float64   `gorm:"type:decimal(12,4)" json:"ask_price_1"`
+	AskPrice2   float64   `gorm:"type:decimal(12,4)" json:"ask_price_2"`
+	AskPrice3   float64   `gorm:"type:decimal(12,4)" json:"ask_price_3"`
+	AskPrice4   float64   `gorm:"type:decimal(12,4)" json:"ask_price_4"`
+	AskPrice5   float64   `gorm:"type:decimal(12,4)" json:"ask_price_5"`
+	BidPrice1   float64   `gorm:"type:decimal(12,4)" json:"bid_price_1"`
+	BidPrice2   float64   `gorm:"type:decimal(12,4)" json:"bid_price_2"`
+	BidPrice3   float64   `gorm:"type:decimal(12,4)" json:"bid_price_3"`
+	BidPrice4   float64   `gorm:"type:decimal(12,4)" json:"bid_price_4"`
+	BidPrice5   float64   `gorm:"type:decimal(12,4)" json:"bid_price_5"`
+	AskVolume1  int64     `json:"ask_volume_1"`
+	AskVolume2  int64     `json:"ask_volume_2"`
+	AskVolume3  int64     `json:"ask_volume_3"`
+	AskVolume4  int64     `json:"ask_volume_4"`
+	AskVolume5  int64     `json:"ask_volume_5"`
+	BidVolume1  int64     `json:"bid_volume_1"`
+	BidVolume2  int64     `json:"bid_volume_2"`
+	BidVolume3  int64     `json:"bid_volume_3"`
+	BidVolume4  int64     `json:"bid_volume_4"`
+	BidVolume5  int64     `json:"bid_volume_5"`
+	TotalAskVol int64     `json:"total_ask_volume"`
+	TotalBidVol int64     `json:"total_bid_volume"`
+	Timestamp   time.Time `gorm:"not null" json:"timestamp"`
+	CreatedAt   time.Time `json:"created_at"`
 }

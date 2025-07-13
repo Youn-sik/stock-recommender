@@ -35,6 +35,12 @@ func main() {
 		queueService = nil
 	}
 
+	// Initialize data collector service
+	dataCollector := services.NewDataCollectorService(db, cfg)
+	
+	// Start scheduled data collection
+	go dataCollector.StartScheduledCollection()
+
 	aiClient := services.NewAIClient(cfg)
 	indicatorService := services.NewIndicatorService()
 	signalGenerator := services.NewSignalGeneratorService(db, indicatorService, aiClient, cacheService, queueService)

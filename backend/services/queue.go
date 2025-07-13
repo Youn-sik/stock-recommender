@@ -144,7 +144,7 @@ func (qs *QueueService) Publish(exchange, routingKey string, message Message) er
 		amqp.Publishing{
 			ContentType: "application/json",
 			Body:        body,
-			Timestamp:   message.Timestamp,
+			Timestamp:   time.Now(),
 		},
 	)
 
