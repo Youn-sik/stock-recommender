@@ -120,54 +120,56 @@ cd ai && python main.py
 cd crawler && python main.py
 ```
 
-## 📡 API 엔드포인트
+### 4. DB증권 API 연동 설정
+```bash
+# .env 파일에 API 키 설정
+DBSEC_APP_KEY=your_dbsec_app_key
+DBSEC_APP_SECRET=your_dbsec_app_secret
 
-### 헬스 체크
-```http
-GET /health
+# 주요 종목 초기화
+curl -X POST http://localhost:8080/api/v1/admin/initialize/major-stocks
+
+# API 연결 상태 확인
+curl http://localhost:8080/api/v1/admin/api-status
 ```
 
-### 종목 관련
-```http
-GET /api/v1/stocks              # 종목 목록
-GET /api/v1/stocks/{symbol}     # 종목 상세
-GET /api/v1/stocks/{symbol}/price      # 최신 주가
-GET /api/v1/stocks/{symbol}/indicators # 기술지표
-```
+## 📚 상세 문서
 
-### 매매 신호
-```http
-GET /api/v1/signals             # 전체 신호
-GET /api/v1/signals/{symbol}    # 종목별 신호
-```
+- **📊 [프로젝트 진행 상황](docs/PROJECT_STATUS.md)** - 전체 작업 현황 및 완료 상태
+- **🏗️ [기술 아키텍처](docs/TECHNICAL_ARCHITECTURE.md)** - 시스템 설계 및 구조 상세 설명
+- **🚀 [배포 가이드](docs/DEPLOYMENT_GUIDE.md)** - Docker 기반 배포 및 운영 가이드
+- **🔌 [DB증권 API 연동](docs/DB_SECURITIES_API_INTEGRATION.md)** - 실시간 데이터 수집 API 가이드
+- **📡 [API 문서](docs/API_DOCUMENTATION.md)** - REST API 엔드포인트 상세 문서
+- **🛠️ [문제 해결 가이드](docs/TROUBLESHOOTING.md)** - 일반적인 문제 및 해결 방법
 
-### 관리자 (개발용)
-```http
-POST /api/v1/admin/stocks                # 종목 등록
-POST /api/v1/admin/collect/{symbol}      # 데이터 수집 트리거
-```
+## 📡 주요 API 엔드포인트
+
+### 🏥 시스템 상태
+- `GET /health` - 헬스 체크
+
+### 📈 주식 정보
+- `GET /api/v1/stocks` - 종목 목록
+- `GET /api/v1/stocks/{symbol}` - 종목 상세 정보
+- `GET /api/v1/stocks/{symbol}/price` - 실시간 주가
+- `GET /api/v1/stocks/{symbol}/indicators` - 기술지표
+
+### 🎯 매매 신호
+- `GET /api/v1/signals` - 전체 매매 신호
+- `GET /api/v1/signals/{symbol}` - 종목별 신호
+
+### 🔧 관리자 API
+- `POST /api/v1/admin/stocks` - 종목 등록
+- `POST /api/v1/admin/collect/{symbol}` - 데이터 수집 트리거
+- `GET /api/v1/admin/api-status` - API 연결 상태
+- `GET /api/v1/admin/database/stats` - 시스템 통계
+
+> **📋 상세한 API 문서는 [API Documentation](docs/API_DOCUMENTATION.md)을 참조하세요.**
 
 ## 🤖 AI 서비스 API
 
-### 매매 결정 요청
-```http
-POST http://localhost:8001/api/v1/decision
-
-{
-  "symbol": "005930",
-  "market": "KR",
-  "indicators": {
-    "rsi": 65.4,
-    "macd": 1250.5,
-    "sma_20": 70800.0
-  }
-}
-```
-
-### 모델 상태 확인
-```http
-GET http://localhost:8001/api/v1/models/status
-```
+- `POST http://localhost:8001/api/v1/decision` - AI 매매 결정 요청
+- `GET http://localhost:8001/api/v1/models/status` - 모델 상태 확인
+- `GET http://localhost:8001/health` - AI 서비스 헬스 체크
 
 ## 📈 데이터 플로우
 
@@ -201,22 +203,46 @@ stock-recommender/
 └── docker-compose.yml      # 컨테이너 설정
 ```
 
-## 🔧 개발 및 기여
+## 🔧 개발 정보
 
 ### 코드 스타일
 - **Go**: gofmt, golint 준수
 - **Python**: Black, flake8 준수
 - **SQL**: PostgreSQL 표준 준수
 
-### 테스트
+### 테스트 실행
 ```bash
-# Go 테스트
+# Go 백엔드 테스트
 go test ./...
 
-# Python 테스트
+# Python AI 서비스 테스트
 cd ai && pytest
+
+# Python 크롤러 테스트
 cd crawler && pytest
 ```
+
+> **🔧 상세한 개발 환경 설정은 [기술 아키텍처](docs/TECHNICAL_ARCHITECTURE.md)를 참조하세요.**
+
+## ✅ 구현 완료된 기능
+
+### 백엔드 시스템 (완료)
+- [x] **DB증권 Open API 통합** - 실시간 주가 데이터 수집
+- [x] **10가지 기술지표 분석** - RSI, MACD, Bollinger Bands 등
+- [x] **PostgreSQL 시계열 DB** - 월별 파티셔닝 적용
+- [x] **Redis 캐싱 시스템** - 성능 최적화
+- [x] **RabbitMQ 메시지 큐** - 비동기 처리
+- [x] **AI 의사결정 인터페이스** - Python FastAPI 서비스
+- [x] **매매 신호 생성 엔진** - 규칙 기반 + AI 결합
+- [x] **뉴스 크롤링 & 감성 분석** - 한국어 뉴스 처리
+- [x] **Docker 컨테이너 환경** - 완전 자동화 배포
+
+### 데이터 수집 (완료)
+- [x] **국내주식**: KOSPI, KOSDAQ 주요 종목
+- [x] **해외주식**: NASDAQ, NYSE 주요 종목  
+- [x] **주요 지수**: KOSPI, KOSDAQ, KOSPI200
+- [x] **실시간 호가**: 매수/매도 5단계 호가 정보
+- [x] **일봉 차트**: 과거 데이터 수집 및 저장
 
 ## 📋 TODO 및 확장 계획
 
@@ -237,3 +263,29 @@ cd crawler && pytest
 - [ ] 분산 처리 시스템
 - [ ] 더 많은 데이터 소스
 - [ ] 고주파 거래 지원
+
+---
+
+## 📖 문서 목차
+
+### 🚀 시작하기
+- **[README.md](README.md)** - 프로젝트 개요 및 빠른 시작
+- **[배포 가이드](docs/DEPLOYMENT_GUIDE.md)** - Docker 기반 설치 및 배포
+
+### 📊 프로젝트 정보
+- **[프로젝트 진행 상황](docs/PROJECT_STATUS.md)** - 작업 현황 및 완료도
+- **[기술 아키텍처](docs/TECHNICAL_ARCHITECTURE.md)** - 시스템 설계 및 구조
+
+### 🔧 개발 및 운영
+- **[DB증권 API 연동](docs/DB_SECURITIES_API_INTEGRATION.md)** - 실시간 데이터 수집
+- **[API 문서](docs/API_DOCUMENTATION.md)** - REST API 상세 명세
+- **[문제 해결 가이드](docs/TROUBLESHOOTING.md)** - 오류 진단 및 해결
+
+### 💡 추가 정보
+- **환경 설정**: `.env.example` 파일 참조
+- **Docker 설정**: `docker-compose.yml` 파일 참조
+- **데이터베이스 스키마**: `sql/` 디렉토리 참조
+
+---
+
+**🏗️ 개발**: AI 기반 주식 투자 추천 시스템 | **📅 업데이트**: 2024년 7월 13일
