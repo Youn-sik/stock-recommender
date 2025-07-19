@@ -19,12 +19,13 @@ import (
 )
 
 type DBSecClient struct {
-	baseURL     string
-	appKey      string
-	appSecret   string
-	accessToken string
-	httpClient  *http.Client
-	rateLimiter chan struct{}
+	baseURL           string
+	appKey            string
+	appSecret         string
+	accessToken       string
+	httpClient        *http.Client
+	rateLimiter       chan struct{}
+	tokenGenerateTime time.Time
 }
 
 // 인증 토큰 응답 구조체
@@ -110,11 +111,23 @@ func (c *DBSecClient) authenticate() error {
 	fmt.Printf("Successfully authenticated with DBSec API. Token: %s, Scope: %s, Expires in %d seconds\n",
 		tokenResp.TokenType, tokenResp.Scope, tokenResp.ExpiresIn)
 
+	c.tokenGenerateTime = time.Now()
+
 	return nil
 }
 
 // API 호출을 위한 공통 함수
 func (c *DBSecClient) makeRequest(method, path string, queryParams map[string]string, body interface{}) ([]byte, error) {
+	return c.MakeRequestWithHeaders(method, path, queryParams, body, nil)
+}
+
+// MakeRequestWithHeaders 추가 헤더를 포함한 API 호출
+func (c *DBSecClient) MakeRequestWithHeaders(method, path string, queryParams map[string]string, body interface{}, additionalHeaders map[string]string) ([]byte, error) {
+	return c.MakeRequestWithResponse(method, path, queryParams, body, additionalHeaders)
+}
+
+// MakeRequestWithResponse 응답 헤더를 포함한 API 호출
+func (c *DBSecClient) MakeRequestWithResponse(method, path string, queryParams map[string]string, body interface{}, additionalHeaders map[string]string) ([]byte, error) {
 	// Rate limiting
 	<-c.rateLimiter
 
@@ -154,6 +167,11 @@ func (c *DBSecClient) makeRequest(method, path string, queryParams map[string]st
 	// 헤더 설정
 	c.setCommonHeaders(req, path, queryParams)
 
+	// 추가 헤더 설정
+	for key, value := range additionalHeaders {
+		req.Header.Set(key, value)
+	}
+
 	// 요청 실행
 	resp, err := c.httpClient.Do(req)
 	if err != nil {
@@ -174,7 +192,7 @@ func (c *DBSecClient) makeRequest(method, path string, queryParams map[string]st
 			fmt.Println("Token expired, re-authenticating...")
 			if err := c.authenticate(); err == nil {
 				// 재인증 성공시 요청 재시도
-				return c.makeRequest(method, path, queryParams, body)
+				return c.MakeRequestWithResponse(method, path, queryParams, body, additionalHeaders)
 			}
 		}
 		return nil, fmt.Errorf("API request failed with status %d: %s", resp.StatusCode, string(respBody))
@@ -217,6 +235,8 @@ func (c *DBSecClient) getTransactionId(path string) string {
 		return "FHKST03010100"
 	case models.PathDomesticStockList:
 		return "CTPF1002R"
+	case models.PathDomesticStockTicker:
+		return models.TrIdStockTicker
 	case models.PathForeignStockPrice:
 		return "HHDFS00000300"
 	case models.PathForeignStockDaily:
@@ -257,9 +277,11 @@ func (c *DBSecClient) HealthCheck() error {
 		return c.authenticate()
 	}
 
-	// 간단한 API 호출로 토큰 유효성 검증
-	_, err := c.GetDomesticStockPrice("005930") // 삼성전자로 테스트
-	return err
+	if time.Since(c.tokenGenerateTime) > time.Duration(23)*time.Hour {
+		return c.authenticate()
+	}
+
+	return nil
 }
 
 // 유틸리티 함수들
