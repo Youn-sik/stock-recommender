@@ -19,20 +19,20 @@ import (
 )
 
 type DBSecClient struct {
-	baseURL      string
-	appKey       string
-	appSecret    string
-	accessToken  string
-	httpClient   *http.Client
-	rateLimiter  chan struct{}
+	baseURL     string
+	appKey      string
+	appSecret   string
+	accessToken string
+	httpClient  *http.Client
+	rateLimiter chan struct{}
 }
 
 // 인증 토큰 응답 구조체
 type TokenResponse struct {
-	AccessToken     string `json:"access_token"`
-	TokenType       string `json:"token_type"`
-	ExpiresIn       int    `json:"expires_in"`
-	AccessTokenExpire string `json:"access_token_token_expired"`
+	AccessToken string `json:"access_token"`
+	TokenType   string `json:"token_type"`
+	ExpiresIn   int    `json:"expires_in"`
+	Scope       string `json:"scope"`
 }
 
 func NewDBSecClient(cfg *config.Config) *DBSecClient {
@@ -49,7 +49,7 @@ func NewDBSecClient(cfg *config.Config) *DBSecClient {
 	}()
 
 	client := &DBSecClient{
-		baseURL:     "https://openapi.dbsec.co.kr",
+		baseURL:     "https://openapi.dbsec.co.kr:8443",
 		appKey:      cfg.API.DBSecAppKey,
 		appSecret:   cfg.API.DBSecAppSecret,
 		httpClient:  &http.Client{Timeout: 30 * time.Second},
@@ -69,12 +69,13 @@ func NewDBSecClient(cfg *config.Config) *DBSecClient {
 
 // OAuth 인증 토큰 발급
 func (c *DBSecClient) authenticate() error {
-	authURL := c.baseURL + "/oauth2/tokenP"
-	
+	authURL := c.baseURL + "/oauth2/token"
+
 	data := url.Values{}
 	data.Set("grant_type", "client_credentials")
 	data.Set("appkey", c.appKey)
-	data.Set("appsecret", c.appSecret)
+	data.Set("appsecretkey", c.appSecret)
+	data.Set("scope", "oob")
 
 	req, err := http.NewRequest("POST", authURL, strings.NewReader(data.Encode()))
 	if err != nil {
@@ -106,8 +107,9 @@ func (c *DBSecClient) authenticate() error {
 	}
 
 	c.accessToken = tokenResp.AccessToken
-	fmt.Printf("Successfully authenticated with DBSec API. Token expires in %d seconds\n", tokenResp.ExpiresIn)
-	
+	fmt.Printf("Successfully authenticated with DBSec API. Token: %s, Scope: %s, Expires in %d seconds\n",
+		tokenResp.TokenType, tokenResp.Scope, tokenResp.ExpiresIn)
+
 	return nil
 }
 
@@ -233,15 +235,15 @@ func (c *DBSecClient) generateHashKey(params map[string]string) string {
 	for k, v := range params {
 		paramPairs = append(paramPairs, fmt.Sprintf("%s=%s", k, v))
 	}
-	
+
 	// 파라미터 문자열 생성
 	paramString := strings.Join(paramPairs, "&")
-	
+
 	// HMAC-SHA256으로 해시 생성
 	h := hmac.New(sha256.New, []byte(c.appSecret))
 	h.Write([]byte(paramString))
 	hash := base64.StdEncoding.EncodeToString(h.Sum(nil))
-	
+
 	return hash
 }
 
@@ -287,19 +289,19 @@ func (c *DBSecClient) parseDate(dateStr string) time.Time {
 	if dateStr == "" {
 		return time.Now()
 	}
-	
+
 	// YYYYMMDD 형식 파싱
 	if len(dateStr) == 8 {
 		if t, err := time.Parse("20060102", dateStr); err == nil {
 			return t
 		}
 	}
-	
+
 	// YYYY-MM-DD 형식 파싱
 	if t, err := time.Parse("2006-01-02", dateStr); err == nil {
 		return t
 	}
-	
+
 	return time.Now()
 }
 
