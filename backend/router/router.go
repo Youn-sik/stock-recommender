@@ -11,7 +11,7 @@ import (
 func Setup(db *gorm.DB, cfg *config.Config) *gin.Engine {
 	// Set Gin mode
 	gin.SetMode(gin.ReleaseMode)
-	
+
 	r := gin.Default()
 
 	// Middleware
@@ -54,12 +54,12 @@ func Setup(db *gorm.DB, cfg *config.Config) *gin.Engine {
 			admin.GET("/stocks", adminHandler.GetAllStocks)
 			admin.PUT("/stocks/:symbol/status", adminHandler.UpdateStockStatus)
 			admin.DELETE("/stocks/:symbol", adminHandler.DeleteStock)
-			
+
 			// Data collection
 			admin.POST("/collect/:symbol", adminHandler.TriggerDataCollection)
 			admin.POST("/collect/all", adminHandler.TriggerAllDataCollection)
 			admin.POST("/initialize/major-stocks", adminHandler.InitializeMajorStocks)
-			
+
 			// System status
 			admin.GET("/api-status", adminHandler.GetAPIStatus)
 			admin.GET("/database/stats", adminHandler.GetDatabaseStats)
