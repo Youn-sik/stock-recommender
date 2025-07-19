@@ -3,11 +3,12 @@ package models
 // API 경로 상수
 const (
 	// 국내주식
-	PathDomesticStockPrice  = "/api/v1/quote/kr-stock/stocks/{symbol}/price"
-	PathDomesticStockAsking = "/api/v1/quote/kr-stock/stocks/{symbol}/asking-price"
-	PathDomesticStockDaily  = "/api/v1/quote/kr-stock/stocks/{symbol}/days"
-	PathDomesticStockList   = "/api/v1/quote/kr-stock/list"
-	PathDomesticStockTicker = "/api/v1/quote/kr-stock/inquiry/stock-ticker"
+	PathDomesticStockPrice        = "/api/v1/quote/kr-stock/stocks/{symbol}/price"
+	PathDomesticStockAsking       = "/api/v1/quote/kr-stock/stocks/{symbol}/asking-price"
+	PathDomesticStockDaily        = "/api/v1/quote/kr-stock/stocks/{symbol}/days"
+	PathDomesticStockList         = "/api/v1/quote/kr-stock/list"
+	PathDomesticStockTicker       = "/api/v1/quote/kr-stock/inquiry/stock-ticker"
+	PathDomesticStockCurrentPrice = "/api/v1/quote/kr-stock/inquiry/price"
 
 	// 해외주식
 	PathForeignStockPrice = "/api/v1/quote/foreign-stock/price"
@@ -22,6 +23,8 @@ const (
 	MarketDivStock = "J"  // 주식
 	MarketDivETF   = "E"  // ETF
 	MarketDivETN   = "EN" // ETN
+	MarketDivELW   = "W"  // ELW
+	MarketDivIndex = "U"  // 업종&지수
 )
 
 // 시장분류구분코드
@@ -32,5 +35,26 @@ const (
 
 // 트랜잭션 ID
 const (
-	TrIdStockTicker = "JCODES" // 주식종목 조회
+	TrIdStockTicker       = "JCODES" // 주식종목 조회
+	TrIdStockCurrentPrice = "PRICE"  // 현재가조회
+)
+
+// 주요 지수 코드
+const (
+	IndexKOSPI         = "1001" // KOSPI
+	IndexKOSDAQ        = "2001" // KOSDAQ
+	IndexKOSPI200      = "3001" // KOSPI200
+	IndexKOSPILarge    = "1002" // 코스피(대형주)
+	IndexKOSPISmall    = "1004" // 코스피(소형주)
+	IndexKOSPI50       = "1053" // KOSPI50종합지수
+	IndexKOSPI100      = "1054" // KOSPI100종합지수
+	IndexKOSPIDiv50    = "1163" // 코스피고배당50
+	IndexKOSDAQLarge   = "2002" // 코스닥(대형주)
+	IndexKOSDAQSmall   = "2004" // 코스닥(소형주)
+	IndexKOSDAQ150     = "2203" // 코스닥 150
+	IndexKP200Leverage = "3903" // KP200레버리지지수
+	IndexVolatility    = "3907" // 변동성지수
+	IndexKRX100        = "0100" // KRX100
+	IndexKTOP30        = "0600" // KTOP 30
+	IndexKOVIXI00      = "K001" // KOVIXI00
 )
