@@ -1,13 +1,12 @@
 package domestic
 
 import (
-	"encoding/json"
 	"fmt"
-	"strconv"
-	"strings"
 
 	"stock-recommender/backend/openapi/client"
+	"stock-recommender/backend/openapi/errors"
 	"stock-recommender/backend/openapi/models"
+	"stock-recommender/backend/openapi/utils"
 )
 
 // CurrentPriceService 현재가조회 서비스
@@ -40,18 +39,13 @@ func (s *CurrentPriceService) GetCurrentPrice(stockCode string, marketDiv string
 		"tr_id":   models.TrIdStockCurrentPrice,
 	})
 	if err != nil {
-		return nil, err
+		return nil, errors.NewNetworkError("failed to call current price API", err)
 	}
 
-	// 응답 파싱
+	// 응답 파싱 및 검증
 	var response models.CurrentPriceResponse
-	if err := json.Unmarshal(respBody, &response); err != nil {
-		return nil, fmt.Errorf("failed to parse response: %w", err)
-	}
-
-	// 응답 코드 확인
-	if response.RspCd != "00000" {
-		return nil, fmt.Errorf("API error %s: %s", response.RspCd, response.RspMsg)
+	if err := utils.ParseAPIResponse(respBody, &response); err != nil {
+		return nil, errors.NewParseError("failed to parse current price response", err)
 	}
 
 	// 데이터 변환
@@ -119,50 +113,27 @@ func (s *CurrentPriceService) GetMultipleStockPrices(stockCodes []string) (map[s
 func (s *CurrentPriceService) convertToCurrentPriceData(stockCode string, output *models.CurrentPriceOutput) *models.CurrentPriceData {
 	return &models.CurrentPriceData{
 		StockCode:        stockCode,
-		BasePrice:        s.parseFloat(output.Sdpr),
-		CurrentPrice:     s.parseFloat(output.Prpr),
-		UpperLimit:       s.parseFloat(output.Mxpr),
-		LowerLimit:       s.parseFloat(output.Llam),
-		OpenPrice:        s.parseFloat(output.Oprc),
-		HighPrice:        s.parseFloat(output.Hprc),
-		LowPrice:         s.parseFloat(output.Lprc),
-		PriceChange:      s.parseFloat(output.PrdyVrss),
-		PriceChangeRate:  s.parseFloat(output.PrdyCtrt),
-		PER:              s.parseFloat(output.Per),
-		PBR:              s.parseFloat(output.Pbr),
-		TradingValue:     s.parseFloat(output.AcmlTrPbmn),
-		TradingVolume:    s.parseInt(output.AcmlVol),
-		YesterdayVolume:  s.parseInt(output.PrdyVol),
-		BidPrice:         s.parseFloat(output.Bidp1),
-		AskPrice:         s.parseFloat(output.Askp1),
-		MarketOpenRate:   s.parseFloat(output.SdprVrssMrktRate),
-		CurrentOpenRate:  s.parseFloat(output.PrprVrssOprcRate),
-		MarketHighRate:   s.parseFloat(output.SdprVrssHgprRate),
-		CurrentHighRate:  s.parseFloat(output.PrprVrssHgprRate),
-		MarketLowRate:    s.parseFloat(output.SdprVrssLwprRate),
-		CurrentLowRate:   s.parseFloat(output.PrprVrssLwprRate),
+		BasePrice:        utils.ParseFloat(output.Sdpr),
+		CurrentPrice:     utils.ParseFloat(output.Prpr),
+		UpperLimit:       utils.ParseFloat(output.Mxpr),
+		LowerLimit:       utils.ParseFloat(output.Llam),
+		OpenPrice:        utils.ParseFloat(output.Oprc),
+		HighPrice:        utils.ParseFloat(output.Hprc),
+		LowPrice:         utils.ParseFloat(output.Lprc),
+		PriceChange:      utils.ParseFloat(output.PrdyVrss),
+		PriceChangeRate:  utils.ParseFloat(output.PrdyCtrt),
+		PER:              utils.ParseFloat(output.Per),
+		PBR:              utils.ParseFloat(output.Pbr),
+		TradingValue:     utils.ParseFloat(output.AcmlTrPbmn),
+		TradingVolume:    utils.ParseInt(output.AcmlVol),
+		YesterdayVolume:  utils.ParseInt(output.PrdyVol),
+		BidPrice:         utils.ParseFloat(output.Bidp1),
+		AskPrice:         utils.ParseFloat(output.Askp1),
+		MarketOpenRate:   utils.ParseFloat(output.SdprVrssMrktRate),
+		CurrentOpenRate:  utils.ParseFloat(output.PrprVrssOprcRate),
+		MarketHighRate:   utils.ParseFloat(output.SdprVrssHgprRate),
+		CurrentHighRate:  utils.ParseFloat(output.PrprVrssHgprRate),
+		MarketLowRate:    utils.ParseFloat(output.SdprVrssLwprRate),
+		CurrentLowRate:   utils.ParseFloat(output.PrprVrssLwprRate),
 	}
-}
-
-// 유틸리티 함수들
-func (s *CurrentPriceService) parseFloat(str string) float64 {
-	if str == "" {
-		return 0
-	}
-	val, err := strconv.ParseFloat(strings.TrimSpace(str), 64)
-	if err != nil {
-		return 0
-	}
-	return val
-}
-
-func (s *CurrentPriceService) parseInt(str string) int64 {
-	if str == "" {
-		return 0
-	}
-	val, err := strconv.ParseInt(strings.TrimSpace(str), 10, 64)
-	if err != nil {
-		return 0
-	}
-	return val
 }

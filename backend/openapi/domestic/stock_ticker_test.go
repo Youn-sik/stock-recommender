@@ -9,6 +9,7 @@ import (
 	"stock-recommender/backend/config"
 	"stock-recommender/backend/openapi/client"
 	"stock-recommender/backend/openapi/models"
+	"stock-recommender/backend/openapi/utils"
 )
 
 func TestStockTickerService_GetStockTickers(t *testing.T) {
@@ -42,6 +43,10 @@ func TestStockTickerService_GetStockTickers(t *testing.T) {
 
 		// 응답 생성
 		response := models.StockTickerResponse{
+			BaseAPIResponse: utils.BaseAPIResponse{
+				RspCd:  "00000",
+				RspMsg: "정상 처리 되었습니다.",
+			},
 			Out: []models.StockTickerOutput{
 				{
 					Iscd:        "000020",
@@ -56,8 +61,6 @@ func TestStockTickerService_GetStockTickers(t *testing.T) {
 					MrktClsCode: models.MarketClassKosdaq,
 				},
 			},
-			RspCd:  "00000",
-			RspMsg: "정상 처리 되었습니다.",
 		}
 
 		// 응답 헤더 설정
@@ -142,12 +145,14 @@ func TestStockTickerService_GetAllStockTickers(t *testing.T) {
 		// 첫 번째 호출
 		if callCount == 1 {
 			response := models.StockTickerResponse{
+				BaseAPIResponse: utils.BaseAPIResponse{
+					RspCd:  "00000",
+					RspMsg: "정상 처리 되었습니다.",
+				},
 				Out: []models.StockTickerOutput{
 					{Iscd: "000020", KorIsnm: "동화약품", MrktClsCode: "1"},
 					{Iscd: "000040", KorIsnm: "KR모터스", MrktClsCode: "1"},
 				},
-				RspCd:  "00000",
-				RspMsg: "정상 처리 되었습니다.",
 			}
 			w.Header().Set("cont_yn", "Y")
 			w.Header().Set("cont_key", "NEXT_KEY_001")
@@ -158,11 +163,13 @@ func TestStockTickerService_GetAllStockTickers(t *testing.T) {
 		// 두 번째 호출
 		if callCount == 2 {
 			response := models.StockTickerResponse{
+				BaseAPIResponse: utils.BaseAPIResponse{
+					RspCd:  "00000",
+					RspMsg: "정상 처리 되었습니다.",
+				},
 				Out: []models.StockTickerOutput{
 					{Iscd: "000050", KorIsnm: "경방", MrktClsCode: "4"},
 				},
-				RspCd:  "00000",
-				RspMsg: "정상 처리 되었습니다.",
 			}
 			w.Header().Set("cont_yn", "N")
 			w.Header().Set("cont_key", "")

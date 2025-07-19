@@ -1,10 +1,10 @@
 package domestic
 
 import (
-	"encoding/json"
-	"fmt"
 	"stock-recommender/backend/openapi/client"
+	"stock-recommender/backend/openapi/errors"
 	"stock-recommender/backend/openapi/models"
+	"stock-recommender/backend/openapi/utils"
 )
 
 // StockTickerService 주식종목 조회 서비스
@@ -36,15 +36,10 @@ func (s *StockTickerService) GetStockTickers(marketDiv string, contKey string) (
 		return nil, "", err
 	}
 
-	// 응답 파싱
+	// 응답 파싱 및 검증
 	var response models.StockTickerResponse
-	if err := json.Unmarshal(respBody, &response); err != nil {
-		return nil, "", fmt.Errorf("failed to parse response: %w", err)
-	}
-
-	// 응답 코드 확인
-	if response.RspCd != "00000" {
-		return nil, "", fmt.Errorf("API error %s: %s", response.RspCd, response.RspMsg)
+	if err := utils.ParseAPIResponse(respBody, &response); err != nil {
+		return nil, "", errors.NewParseError("failed to parse stock ticker response", err)
 	}
 
 	return &response, nextContKey, nil
@@ -53,22 +48,20 @@ func (s *StockTickerService) GetStockTickers(marketDiv string, contKey string) (
 // GetAllStockTickers 모든 주식종목 조회 (페이지네이션 포함)
 func (s *StockTickerService) GetAllStockTickers(marketDiv string) ([]models.StockTickerOutput, error) {
 	var allStocks []models.StockTickerOutput
-	contKey := ""
+	pagination := utils.NewPaginationHelper()
 
 	for {
-		response, nextContKey, err := s.GetStockTickers(marketDiv, contKey)
+		response, nextContKey, err := s.GetStockTickers(marketDiv, pagination.ContKey)
 		if err != nil {
 			return nil, err
 		}
 
 		allStocks = append(allStocks, response.Out...)
 
-		// 더 이상 데이터가 없으면 종료
-		if nextContKey == "" || nextContKey == "N" {
+		pagination.SetNextKey(nextContKey)
+		if !pagination.HasNext() {
 			break
 		}
-
-		contKey = nextContKey
 	}
 
 	return allStocks, nil
@@ -126,8 +119,6 @@ func (s *StockTickerService) makeRequestWithContKey(reqBody interface{}, contKey
 
 // getContYn 연속거래 여부 반환
 func (s *StockTickerService) getContYn(contKey string) string {
-	if contKey == "" {
-		return "N"
-	}
-	return "Y"
+	pagination := &utils.PaginationHelper{ContKey: contKey}
+	return pagination.GetContYn()
 }

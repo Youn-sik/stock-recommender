@@ -1,5 +1,7 @@
 package models
 
+import "stock-recommender/backend/openapi/utils"
+
 // StockTickerRequest 주식종목 조회 요청
 type StockTickerRequest struct {
 	In StockTickerInput `json:"In"`
@@ -12,9 +14,8 @@ type StockTickerInput struct {
 
 // StockTickerResponse 주식종목 조회 응답
 type StockTickerResponse struct {
-	Out    []StockTickerOutput `json:"Out"`
-	RspCd  string              `json:"rsp_cd"`  // 응답코드
-	RspMsg string              `json:"rsp_msg"` // 응답메시지
+	utils.BaseAPIResponse
+	Out []StockTickerOutput `json:"Out"`
 }
 
 // StockTickerOutput 주식종목 조회 출력

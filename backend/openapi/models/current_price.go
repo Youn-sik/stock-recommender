@@ -1,5 +1,7 @@
 package models
 
+import "stock-recommender/backend/openapi/utils"
+
 // CurrentPriceRequest 현재가조회 요청
 type CurrentPriceRequest struct {
 	In CurrentPriceInput `json:"In"`
@@ -13,9 +15,8 @@ type CurrentPriceInput struct {
 
 // CurrentPriceResponse 현재가조회 응답
 type CurrentPriceResponse struct {
-	Out    CurrentPriceOutput `json:"Out"`
-	RspCd  string             `json:"rsp_cd"`  // 응답코드
-	RspMsg string             `json:"rsp_msg"` // 응답메시지
+	utils.BaseAPIResponse
+	Out CurrentPriceOutput `json:"Out"`
 }
 
 // CurrentPriceOutput 현재가조회 출력

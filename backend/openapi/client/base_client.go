@@ -10,12 +10,14 @@ import (
 	"io"
 	"net/http"
 	"net/url"
-	"strconv"
 	"strings"
 	"time"
 
 	"stock-recommender/backend/config"
+	"stock-recommender/backend/openapi/errors"
+	"stock-recommender/backend/openapi/logger"
 	"stock-recommender/backend/openapi/models"
+	"stock-recommender/backend/openapi/utils"
 )
 
 type DBSecClient struct {
@@ -26,6 +28,7 @@ type DBSecClient struct {
 	httpClient        *http.Client
 	rateLimiter       chan struct{}
 	tokenGenerateTime time.Time
+	logger            logger.Logger
 }
 
 // 인증 토큰 응답 구조체
@@ -55,13 +58,14 @@ func NewDBSecClient(cfg *config.Config) *DBSecClient {
 		appSecret:   cfg.API.DBSecAppSecret,
 		httpClient:  &http.Client{Timeout: 30 * time.Second},
 		rateLimiter: rateLimiter,
+		logger:      logger.GetDefaultLogger().With(logger.Field{Key: "component", Value: "dbsec_client"}),
 	}
 
 	// 시작시 토큰 발급
 	if client.appKey != "" && client.appSecret != "" {
 		err := client.authenticate()
 		if err != nil {
-			fmt.Printf("Warning: Failed to authenticate with DBSec API: %v\n", err)
+			client.logger.Warn("Failed to authenticate with DBSec API during initialization", logger.Field{Key: "error", Value: err})
 		}
 	}
 
@@ -70,6 +74,8 @@ func NewDBSecClient(cfg *config.Config) *DBSecClient {
 
 // OAuth 인증 토큰 발급
 func (c *DBSecClient) authenticate() error {
+	c.logger.Debug("Starting authentication process")
+	
 	authURL := c.baseURL + "/oauth2/token"
 
 	data := url.Values{}
@@ -80,7 +86,7 @@ func (c *DBSecClient) authenticate() error {
 
 	req, err := http.NewRequest("POST", authURL, strings.NewReader(data.Encode()))
 	if err != nil {
-		return fmt.Errorf("failed to create auth request: %w", err)
+		return errors.NewNetworkError("failed to create auth request", err)
 	}
 
 	req.Header.Set("Content-Type", "application/x-www-form-urlencoded")
@@ -88,30 +94,35 @@ func (c *DBSecClient) authenticate() error {
 
 	resp, err := c.httpClient.Do(req)
 	if err != nil {
-		return fmt.Errorf("auth request failed: %w", err)
+		return errors.NewNetworkError("auth request failed", err)
 	}
 	defer resp.Body.Close()
 
 	body, err := io.ReadAll(resp.Body)
 	if err != nil {
-		return fmt.Errorf("failed to read auth response: %w", err)
+		return errors.NewNetworkError("failed to read auth response", err)
 	}
 
 	if resp.StatusCode != http.StatusOK {
-		return fmt.Errorf("authentication failed with status %d: %s", resp.StatusCode, string(body))
+		c.logger.Error("Authentication failed", fmt.Errorf("status: %d", resp.StatusCode),
+			logger.Field{Key: "status_code", Value: resp.StatusCode},
+			logger.Field{Key: "response_body", Value: string(body)})
+		return errors.NewAuthError("authentication failed", fmt.Errorf("status %d: %s", resp.StatusCode, string(body)))
 	}
 
 	var tokenResp TokenResponse
 	err = json.Unmarshal(body, &tokenResp)
 	if err != nil {
-		return fmt.Errorf("failed to parse token response: %w", err)
+		return errors.NewParseError("failed to parse token response", err)
 	}
 
 	c.accessToken = tokenResp.AccessToken
-	fmt.Printf("Successfully authenticated with DBSec API. Token: %s, Scope: %s, Expires in %d seconds\n",
-		tokenResp.TokenType, tokenResp.Scope, tokenResp.ExpiresIn)
-
 	c.tokenGenerateTime = time.Now()
+	
+	c.logger.Info("Successfully authenticated with DBSec API",
+		logger.Field{Key: "token_type", Value: tokenResp.TokenType},
+		logger.Field{Key: "scope", Value: tokenResp.Scope},
+		logger.Field{Key: "expires_in", Value: tokenResp.ExpiresIn})
 
 	return nil
 }
@@ -189,13 +200,23 @@ func (c *DBSecClient) MakeRequestWithResponse(method, path string, queryParams m
 	if resp.StatusCode != http.StatusOK {
 		// 토큰 만료 등의 경우 재인증 시도
 		if resp.StatusCode == http.StatusUnauthorized {
-			fmt.Println("Token expired, re-authenticating...")
+			c.logger.Info("Token expired, attempting re-authentication")
 			if err := c.authenticate(); err == nil {
+				c.logger.Debug("Re-authentication successful, retrying request")
 				// 재인증 성공시 요청 재시도
 				return c.MakeRequestWithResponse(method, path, queryParams, body, additionalHeaders)
+			} else {
+				c.logger.Error("Re-authentication failed", err)
 			}
 		}
-		return nil, fmt.Errorf("API request failed with status %d: %s", resp.StatusCode, string(respBody))
+		
+		c.logger.Error("API request failed", fmt.Errorf("status: %d", resp.StatusCode),
+			logger.Field{Key: "method", Value: method},
+			logger.Field{Key: "path", Value: path},
+			logger.Field{Key: "status_code", Value: resp.StatusCode},
+			logger.Field{Key: "response_body", Value: string(respBody)})
+		
+		return nil, errors.NewNetworkError("API request failed", fmt.Errorf("status %d: %s", resp.StatusCode, string(respBody)))
 	}
 
 	return respBody, nil
@@ -290,47 +311,17 @@ func (c *DBSecClient) HealthCheck() error {
 	return nil
 }
 
-// 유틸리티 함수들
+// 유틸리티 함수들 (레거시 지원을 위해 유지, 새 코드는 utils 패키지 사용 권장)
 func (c *DBSecClient) parseFloat(s string) float64 {
-	if s == "" {
-		return 0
-	}
-	val, err := strconv.ParseFloat(strings.TrimSpace(s), 64)
-	if err != nil {
-		return 0
-	}
-	return val
+	return utils.ParseFloat(s)
 }
 
 func (c *DBSecClient) parseInt(s string) int64 {
-	if s == "" {
-		return 0
-	}
-	val, err := strconv.ParseInt(strings.TrimSpace(s), 10, 64)
-	if err != nil {
-		return 0
-	}
-	return val
+	return utils.ParseInt(s)
 }
 
 func (c *DBSecClient) parseDate(dateStr string) time.Time {
-	if dateStr == "" {
-		return time.Now()
-	}
-
-	// YYYYMMDD 형식 파싱
-	if len(dateStr) == 8 {
-		if t, err := time.Parse("20060102", dateStr); err == nil {
-			return t
-		}
-	}
-
-	// YYYY-MM-DD 형식 파싱
-	if t, err := time.Parse("2006-01-02", dateStr); err == nil {
-		return t
-	}
-
-	return time.Now()
+	return utils.ParseDate(dateStr)
 }
 
 // API 키 유효성 검사

@@ -1,95 +1,52 @@
 package domestic
 
 import (
-	"encoding/json"
-	"net/http"
-	"net/http/httptest"
 	"testing"
 
-	"stock-recommender/backend/config"
 	"stock-recommender/backend/openapi/client"
 	"stock-recommender/backend/openapi/models"
+	"stock-recommender/backend/openapi/utils"
 )
 
 func TestCurrentPriceService_GetCurrentPrice(t *testing.T) {
-	// 테스트 서버 생성
-	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		// 경로 확인
-		if r.URL.Path != models.PathDomesticStockCurrentPrice {
-			t.Errorf("Expected path %s, got %s", models.PathDomesticStockCurrentPrice, r.URL.Path)
-		}
+	// 모의 데이터 생성
+	mockData := models.CurrentPriceOutput{
+		Sdpr:             "53900",
+		Prpr:             "55550",
+		Mxpr:             "70000",
+		Llam:             "37800",
+		Oprc:             "54300",
+		Hprc:             "55900",
+		Lprc:             "54200",
+		PrdyVrss:         "1650",
+		PrdyCtrt:         "3.06",
+		Per:              "10.89",
+		Pbr:              "0.93",
+		AcmlTrPbmn:       "400303637800",
+		AcmlVol:          "7240324",
+		PrdyVol:          "13439520",
+		Bidp1:            "55500",
+		Askp1:            "55600",
+		SdprVrssMrktRate: "0.74",
+		PrprVrssOprcRate: "-2.25",
+		SdprVrssHgprRate: "3.71",
+		PrprVrssHgprRate: "0.63",
+		SdprVrssLwprRate: "0.56",
+		PrprVrssLwprRate: "-2.43",
+	}
 
-		// 메소드 확인
-		if r.Method != "POST" {
-			t.Errorf("Expected method POST, got %s", r.Method)
-		}
-
-		// 요청 본문 파싱
-		var req models.CurrentPriceRequest
-		if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
-			t.Fatalf("Failed to decode request body: %v", err)
-		}
-
-		// 요청 데이터 검증
-		if req.In.InputIscd1 != "005930" {
-			t.Errorf("Expected stock code 005930, got %s", req.In.InputIscd1)
-		}
-		if req.In.InputCondMrktDivCode != models.MarketDivStock {
-			t.Errorf("Expected market div %s, got %s", models.MarketDivStock, req.In.InputCondMrktDivCode)
-		}
-
-		// 응답 생성
-		response := models.CurrentPriceResponse{
-			Out: models.CurrentPriceOutput{
-				Sdpr:             "53900",
-				Prpr:             "55550",
-				Mxpr:             "70000",
-				Llam:             "37800",
-				Oprc:             "54300",
-				Hprc:             "55900",
-				Lprc:             "54200",
-				PrdyVrss:         "1650",
-				PrdyCtrt:         "3.06",
-				Per:              "10.89",
-				Pbr:              "0.93",
-				AcmlTrPbmn:       "400303637800",
-				AcmlVol:          "7240324",
-				PrdyVol:          "13439520",
-				Bidp1:            "55500",
-				Askp1:            "55600",
-				SdprVrssMrktRate: "0.74",
-				PrprVrssOprcRate: "-2.25",
-				SdprVrssHgprRate: "3.71",
-				PrprVrssHgprRate: "0.63",
-				SdprVrssLwprRate: "0.56",
-				PrprVrssLwprRate: "-2.43",
-			},
-			RspCd:  "00000",
-			RspMsg: "정상 처리 되었습니다.",
-		}
-
-		// 응답 헤더 설정
-		w.Header().Set("Content-Type", "application/json")
-
-		// 응답 작성
-		json.NewEncoder(w).Encode(response)
-	}))
-	defer server.Close()
+	// 모의 서버 생성
+	handler := utils.CreateCurrentPriceMockHandler(t, models.PathDomesticStockCurrentPrice, "005930", mockData)
+	mockServer := utils.NewMockServer(t, handler)
+	defer mockServer.Close()
 
 	// 테스트용 클라이언트 생성
-	cfg := &config.Config{
-		API: config.APIConfig{
-			DBSecAppKey:    "test-key",
-			DBSecAppSecret: "test-secret",
-		},
-	}
+	cfg := utils.CreateTestConfig()
 	apiClient := client.NewDBSecClient(cfg)
 	service := NewCurrentPriceService(apiClient)
 
 	// 실제 API 호출이 설정되어 있지 않은 경우 스킵
-	if !apiClient.HasValidCredentials() {
-		t.Skip("API credentials not configured")
-	}
+	utils.SkipIfNoCredentials(t, apiClient)
 
 	// 테스트 실행
 	t.Run("GetStockPrice", func(t *testing.T) {
@@ -99,15 +56,9 @@ func TestCurrentPriceService_GetCurrentPrice(t *testing.T) {
 		}
 
 		// 데이터 검증
-		if data.StockCode != "005930" {
-			t.Errorf("Expected stock code 005930, got %s", data.StockCode)
-		}
-		if data.CurrentPrice == 0 {
-			t.Error("Expected non-zero current price")
-		}
-		if data.TradingVolume == 0 {
-			t.Error("Expected non-zero trading volume")
-		}
+		utils.AssertStringEqual(t, "005930", data.StockCode, "Stock code")
+		utils.AssertFloatEqual(t, 55550, data.CurrentPrice, "Current price")
+		utils.AssertIntEqual(t, 7240324, data.TradingVolume, "Trading volume")
 	})
 
 	t.Run("GetKOSPIPrice", func(t *testing.T) {
@@ -195,7 +146,6 @@ func TestCurrentPriceService_DataConversion(t *testing.T) {
 }
 
 func TestCurrentPriceService_ParseFunctions(t *testing.T) {
-	service := &CurrentPriceService{}
 
 	t.Run("parseFloat", func(t *testing.T) {
 		tests := []struct {
@@ -209,7 +159,7 @@ func TestCurrentPriceService_ParseFunctions(t *testing.T) {
 		}
 
 		for _, test := range tests {
-			result := service.parseFloat(test.input)
+			result := utils.ParseFloat(test.input)
 			if result != test.expected {
 				t.Errorf("parseFloat(%s) = %f, expected %f", test.input, result, test.expected)
 			}
@@ -228,7 +178,7 @@ func TestCurrentPriceService_ParseFunctions(t *testing.T) {
 		}
 
 		for _, test := range tests {
-			result := service.parseInt(test.input)
+			result := utils.ParseInt(test.input)
 			if result != test.expected {
 				t.Errorf("parseInt(%s) = %d, expected %d", test.input, result, test.expected)
 			}
