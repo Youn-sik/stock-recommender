@@ -239,6 +239,8 @@ func (c *DBSecClient) getTransactionId(path string) string {
 		return models.TrIdStockTicker
 	case models.PathDomesticStockCurrentPrice:
 		return models.TrIdStockCurrentPrice
+	case models.PathForeignStockTicker:
+		return models.TrIdForeignStockTicker
 	case models.PathForeignStockPrice:
 		return "HHDFS00000300"
 	case models.PathForeignStockDaily:

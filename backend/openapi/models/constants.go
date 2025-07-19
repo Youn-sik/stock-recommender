@@ -11,8 +11,9 @@ const (
 	PathDomesticStockCurrentPrice = "/api/v1/quote/kr-stock/inquiry/price"
 
 	// 해외주식
-	PathForeignStockPrice = "/api/v1/quote/foreign-stock/price"
-	PathForeignStockDaily = "/api/v1/quote/foreign-stock/daily-price"
+	PathForeignStockPrice  = "/api/v1/quote/foreign-stock/price"
+	PathForeignStockDaily  = "/api/v1/quote/foreign-stock/daily-price"
+	PathForeignStockTicker = "/api/v1/quote/overseas-stock/inquiry/stock-ticker"
 
 	// 지수
 	PathIndexPrice = "/api/v1/quote/index/price"
@@ -35,8 +36,9 @@ const (
 
 // 트랜잭션 ID
 const (
-	TrIdStockTicker       = "JCODES" // 주식종목 조회
-	TrIdStockCurrentPrice = "PRICE"  // 현재가조회
+	TrIdStockTicker         = "JCODES"    // 주식종목 조회
+	TrIdStockCurrentPrice   = "PRICE"     // 현재가조회
+	TrIdForeignStockTicker  = "FSTKCODES" // 해외주식종목 조회
 )
 
 // 주요 지수 코드
@@ -57,4 +59,11 @@ const (
 	IndexKRX100        = "0100" // KRX100
 	IndexKTOP30        = "0600" // KTOP 30
 	IndexKOVIXI00      = "K001" // KOVIXI00
+)
+
+// 해외증시구분코드
+const (
+	ExchangeNY    = "NY" // 뉴욕
+	ExchangeNASDAQ = "NA" // 나스닥
+	ExchangeAMEX  = "AM" // 아멕스
 )
