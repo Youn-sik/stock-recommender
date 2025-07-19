@@ -11,9 +11,10 @@ const (
 	PathDomesticStockCurrentPrice = "/api/v1/quote/kr-stock/inquiry/price"
 
 	// 해외주식
-	PathForeignStockPrice  = "/api/v1/quote/foreign-stock/price"
-	PathForeignStockDaily  = "/api/v1/quote/foreign-stock/daily-price"
-	PathForeignStockTicker = "/api/v1/quote/overseas-stock/inquiry/stock-ticker"
+	PathForeignStockPrice        = "/api/v1/quote/foreign-stock/price"
+	PathForeignStockDaily        = "/api/v1/quote/foreign-stock/daily-price"
+	PathForeignStockTicker       = "/api/v1/quote/overseas-stock/inquiry/stock-ticker"
+	PathForeignStockCurrentPrice = "/api/v1/quote/overseas-stock/inquiry/price"
 
 	// 지수
 	PathIndexPrice = "/api/v1/quote/index/price"
@@ -36,9 +37,10 @@ const (
 
 // 트랜잭션 ID
 const (
-	TrIdStockTicker         = "JCODES"    // 주식종목 조회
-	TrIdStockCurrentPrice   = "PRICE"     // 현재가조회
-	TrIdForeignStockTicker  = "FSTKCODES" // 해외주식종목 조회
+	TrIdStockTicker               = "JCODES"    // 주식종목 조회
+	TrIdStockCurrentPrice         = "PRICE"     // 현재가조회
+	TrIdForeignStockTicker        = "FSTKCODES" // 해외주식종목 조회
+	TrIdForeignStockCurrentPrice  = "FSTKPRICE" // 해외주식현재가조회
 )
 
 // 주요 지수 코드
@@ -61,9 +63,16 @@ const (
 	IndexKOVIXI00      = "K001" // KOVIXI00
 )
 
-// 해외증시구분코드
+// 해외증시구분코드 (종목조회용)
 const (
-	ExchangeNY    = "NY" // 뉴욕
+	ExchangeNY     = "NY" // 뉴욕
 	ExchangeNASDAQ = "NA" // 나스닥
-	ExchangeAMEX  = "AM" // 아멕스
+	ExchangeAMEX   = "AM" // 아멕스
+)
+
+// 해외주식 시장분류코드 (현재가조회용)
+const (
+	ForeignMarketNY     = "FY" // 뉴욕
+	ForeignMarketNASDAQ = "FN" // 나스닥
+	ForeignMarketAMEX   = "FA" // 아멕스
 )
