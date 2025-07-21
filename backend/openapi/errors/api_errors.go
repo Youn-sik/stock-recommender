@@ -23,6 +23,7 @@ const (
 	ErrCodeInvalidData    ErrorCode = "INVALID_DATA"
 	ErrCodeParseError     ErrorCode = "PARSE_ERROR"
 	ErrCodeNotFound       ErrorCode = "NOT_FOUND"
+	ErrCodeValidation     ErrorCode = "VALIDATION_ERROR"
 	
 	// 시스템 관련 에러
 	ErrCodeServerError    ErrorCode = "SERVER_ERROR"
@@ -95,6 +96,16 @@ func NewRateLimitError(message string) *APIError {
 		Code:       ErrCodeRateLimit,
 		Message:    message,
 		StatusCode: http.StatusTooManyRequests,
+	}
+}
+
+// NewValidationError 유효성 검증 에러 생성
+func NewValidationError(message string, cause error) *APIError {
+	return &APIError{
+		Code:       ErrCodeValidation,
+		Message:    message,
+		StatusCode: http.StatusBadRequest,
+		Cause:      cause,
 	}
 }
 

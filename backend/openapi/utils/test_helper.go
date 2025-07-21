@@ -189,3 +189,179 @@ func AssertStringEqual(t *testing.T, expected, actual, message string) {
 		t.Errorf("%s: expected %s, got %s", message, expected, actual)
 	}
 }
+
+// CreateForeignMinChartMockHandler 해외주식 분차트 조회용 모의 핸들러 생성
+func CreateForeignMinChartMockHandler(t *testing.T, expectedPath string, expectedStockCode string, mockData interface{}) http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
+		// 경로 확인
+		if r.URL.Path != expectedPath {
+			t.Errorf("Expected path %s, got %s", expectedPath, r.URL.Path)
+		}
+
+		// 메소드 확인
+		if r.Method != "POST" {
+			t.Errorf("Expected method POST, got %s", r.Method)
+		}
+
+		// 요청 본문 파싱
+		var req map[string]interface{}
+		if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
+			t.Fatalf("Failed to decode request body: %v", err)
+		}
+
+		// 요청 데이터 검증
+		if in, ok := req["In"].(map[string]interface{}); ok {
+			if stockCode, ok := in["InputIscd1"].(string); ok {
+				if stockCode != expectedStockCode {
+					t.Errorf("Expected stock code %s, got %s", expectedStockCode, stockCode)
+				}
+			}
+		}
+
+		// 응답 생성
+		response := map[string]interface{}{
+			"rsp_cd":  "00000",
+			"rsp_msg": "정상 처리 되었습니다.",
+			"Out":     mockData,
+		}
+
+		// 응답 헤더 설정
+		w.Header().Set("Content-Type", "application/json")
+
+		// 응답 작성
+		json.NewEncoder(w).Encode(response)
+	}
+}
+// CreateForeignDayChartMockHandler 해외주식 일차트 조회용 모의 핸들러 생성
+func CreateForeignDayChartMockHandler(t *testing.T, expectedPath string, expectedStockCode string, mockData interface{}) http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
+		// 경로 확인
+		if r.URL.Path != expectedPath {
+			t.Errorf("Expected path %s, got %s", expectedPath, r.URL.Path)
+		}
+
+		// 메소드 확인
+		if r.Method != "POST" {
+			t.Errorf("Expected method POST, got %s", r.Method)
+		}
+
+		// 요청 본문 파싱
+		var req map[string]interface{}
+		if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
+			t.Fatalf("Failed to decode request body: %v", err)
+		}
+
+		// 요청 데이터 검증
+		if in, ok := req["In"].(map[string]interface{}); ok {
+			if stockCode, ok := in["InputIscd1"].(string); ok {
+				if stockCode != expectedStockCode {
+					t.Errorf("Expected stock code %s, got %s", expectedStockCode, stockCode)
+				}
+			}
+		}
+
+		// 응답 생성
+		response := map[string]interface{}{
+			"rsp_cd":  "00000",
+			"rsp_msg": "정상 처리 되었습니다.",
+			"Out":     mockData,
+		}
+
+		// 응답 헤더 설정
+		w.Header().Set("Content-Type", "application/json")
+
+		// 응답 작성
+		json.NewEncoder(w).Encode(response)
+	}
+}
+// CreateForeignWeekChartMockHandler 해외주식 주차트 조회용 모의 핸들러 생성
+func CreateForeignWeekChartMockHandler(t *testing.T, expectedPath string, expectedStockCode string, mockData interface{}) http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
+		// 경로 확인
+		if r.URL.Path != expectedPath {
+			t.Errorf("Expected path %s, got %s", expectedPath, r.URL.Path)
+		}
+
+		// 메소드 확인
+		if r.Method != "POST" {
+			t.Errorf("Expected method POST, got %s", r.Method)
+		}
+
+		// 요청 본문 파싱
+		var req map[string]interface{}
+		if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
+			t.Fatalf("Failed to decode request body: %v", err)
+		}
+
+		// 요청 데이터 검증
+		if in, ok := req["In"].(map[string]interface{}); ok {
+			if stockCode, ok := in["InputIscd1"].(string); ok {
+				if stockCode != expectedStockCode {
+					t.Errorf("Expected stock code %s, got %s", expectedStockCode, stockCode)
+				}
+			}
+			// 기간구분코드 확인
+			if periodDiv, ok := in["InputPeriodDivCode"].(string); ok {
+				if periodDiv != "W" {
+					t.Errorf("Expected period div code W, got %s", periodDiv)
+				}
+			}
+		}
+
+		// 응답 생성
+		response := map[string]interface{}{
+			"rsp_cd":  "00000",
+			"rsp_msg": "정상 처리 되었습니다.",
+			"Out":     mockData,
+		}
+
+		// 응답 헤더 설정
+		w.Header().Set("Content-Type", "application/json")
+
+		// 응답 작성
+		json.NewEncoder(w).Encode(response)
+	}
+}
+
+// CreateForeignMonthChartMockHandler 해외주식 월차트 조회용 모의 핸들러 생성
+func CreateForeignMonthChartMockHandler(t *testing.T, expectedPath string, expectedStockCode string, mockData interface{}) http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
+		// 경로 확인
+		if r.URL.Path != expectedPath {
+			t.Errorf("Expected path %s, got %s", expectedPath, r.URL.Path)
+		}
+
+		// 메소드 확인
+		if r.Method != "POST" {
+			t.Errorf("Expected method POST, got %s", r.Method)
+		}
+
+		// 요청 본문 파싱
+		var req map[string]interface{}
+		if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
+			t.Fatalf("Failed to decode request body: %v", err)
+		}
+
+		// 요청 데이터 검증
+		if in, ok := req["In"].(map[string]interface{}); ok {
+			if stockCode, ok := in["InputIscd1"].(string); ok {
+				if stockCode != expectedStockCode {
+					t.Errorf("Expected stock code %s, got %s", expectedStockCode, stockCode)
+				}
+			}
+		}
+
+		// 응답 생성
+		response := map[string]interface{}{
+			"rsp_cd":  "00000",
+			"rsp_msg": "정상 처리 되었습니다.",
+			"Out":     mockData,
+		}
+
+		// 응답 헤더 설정
+		w.Header().Set("Content-Type", "application/json")
+
+		// 응답 작성
+		json.NewEncoder(w).Encode(response)
+	}
+}

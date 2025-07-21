@@ -67,3 +67,8 @@ func (p *PaginationHelper) SetNextKey(contKey string) {
 func (p *PaginationHelper) HasNext() bool {
 	return p.ContKey != "" && p.ContKey != "N"
 }
+
+// IsSuccessResponse 성공 응답인지 확인
+func IsSuccessResponse(responseCode string) bool {
+	return responseCode == "00000"
+}

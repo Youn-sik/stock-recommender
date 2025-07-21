@@ -264,6 +264,14 @@ func (c *DBSecClient) getTransactionId(path string) string {
 		return models.TrIdForeignStockTicker
 	case models.PathForeignStockCurrentPrice:
 		return models.TrIdForeignStockCurrentPrice
+	case models.PathForeignStockMinChart:
+		return models.TrIdForeignStockMinChart
+	case models.PathForeignStockDayChart:
+		return models.TrIdForeignStockDayChart
+	case models.PathForeignStockWeekChart:
+		return models.TrIdForeignStockWeekChart
+	case models.PathForeignStockMonthChart:
+		return models.TrIdForeignStockMonthChart
 	case models.PathForeignStockPrice:
 		return "HHDFS00000300"
 	case models.PathForeignStockDaily:
