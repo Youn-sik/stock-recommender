@@ -60,7 +60,7 @@ RABBITMQ_USER=stockmq
 RABBITMQ_PASS=stockmqpass
 
 # 🔑 중요: DB증권 API 키 설정
-DBSEC_API_KEY=your_actual_api_key_here
+DBSEC_APP_KEY=your_actual_api_key_here
 
 # AI 서비스 설정
 AI_SERVICE_URL=http://ai-service:8001

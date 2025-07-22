@@ -471,7 +471,7 @@ services:
     build: ./backend
     command: ["./data-collector"]
     environment:
-      - DBSEC_API_KEY=${DBSEC_API_KEY}
+      - DBSEC_APP_KEY=${DBSEC_APP_KEY}
     depends_on:
       - postgres
       - rabbitmq

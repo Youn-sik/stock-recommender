@@ -69,7 +69,7 @@ services:
       - RABBITMQ_PORT=5672
       - RABBITMQ_USER=stockmq
       - RABBITMQ_PASS=stockmqpass
-      - DBSEC_API_KEY=${DBSEC_API_KEY}
+      - DBSEC_APP_KEY=${DBSEC_APP_KEY}
       - AI_SERVICE_URL=http://ai-service:8001
     volumes:
       - ./backend:/app
@@ -100,7 +100,7 @@ services:
       - RABBITMQ_PORT=5672
       - RABBITMQ_USER=stockmq
       - RABBITMQ_PASS=stockmqpass
-      - DBSEC_API_KEY=${DBSEC_API_KEY}
+      - DBSEC_APP_KEY=${DBSEC_APP_KEY}
     volumes:
       - ./backend:/app
     depends_on:

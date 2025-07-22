@@ -128,7 +128,7 @@ print_status "Ready for deployment with Docker Compose"
 
 echo ""
 print_status "To run the full system:"
-echo "  1. Set DB증권 API key: export DBSEC_API_KEY=your_key"
+echo "  1. Set DB증권 API key: export DBSEC_APP_KEY=your_key"
 echo "  2. Start services: docker-compose up -d"
 echo "  3. Check health: curl http://localhost:8080/health"
 

@@ -90,7 +90,7 @@ AI 기반 주식 투자 추천 시스템으로, 한국 및 미국 지수 종목�
 cp .env.example .env
 
 # API 키 설정
-vim .env  # DBSEC_API_KEY 설정
+vim .env  # DBSEC_APP_KEY 설정
 ```
 
 ### 2. Docker 컨테이너 실행
